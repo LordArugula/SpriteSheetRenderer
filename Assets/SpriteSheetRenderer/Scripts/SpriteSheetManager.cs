@@ -104,14 +104,16 @@ namespace ECSSpriteSheetAnimation
             commandBuffer.SetComponent(e, new SpriteIndex { Value = 0 });
         }
 
-        public static void UpdateEntity(Entity entity, IComponentData componentData)
+        public static void UpdateEntity<T>(Entity entity, T componentData) 
+            where T : struct, IComponentData
         {
-            EntityManager.SetComponentData(entity, (dynamic)componentData);
+            EntityManager.SetComponentData(entity, componentData);
         }
 
-        public static void UpdateEntity(EntityCommandBuffer commandBuffer, Entity entity, IComponentData componentData)
+        public static void UpdateEntity<T>(EntityCommandBuffer commandBuffer, Entity entity, T componentData)
+            where T : struct, IComponentData
         {
-            commandBuffer.SetComponent(entity, (dynamic)componentData);
+            commandBuffer.SetComponent(entity, componentData);
         }
 
         public static void DestroyEntity(Entity e, string materialName)
