@@ -58,7 +58,7 @@ namespace ECSSpriteSheetAnimation.Examples
                 eManager.SetComponentData(e, new SpriteIndex { Value = rand.NextInt(0, cellCount) });
                 eManager.SetComponentData(e, new Scale { Value = 10 });
                 eManager.SetComponentData(e, new Position2D { Value = rand.NextFloat2(area.min, area.max) });
-                eManager.SetComponentData(e, new SpriteSheetAnimation { maxSprites = cellCount, play = true, repetition = SpriteSheetAnimation.RepetitionType.Loop, samples = 10 });
+                eManager.SetComponentData(e, new SpriteSheetAnimation { frameCount = cellCount, playMode = PlayMode.Loop, framesPerSecond = 10 });
                 var color = UnityEngine.Random.ColorHSV(.15f, .75f);
                 SpriteSheetColor col = new SpriteSheetColor { color = new float4(color.r, color.g, color.b, color.a) };
                 eManager.SetComponentData(e, col);

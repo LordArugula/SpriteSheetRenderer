@@ -8,9 +8,16 @@ namespace ECSSpriteSheetAnimation
 {
     public static class SpriteSheetCache
     {
-        private static Dictionary<string, KeyValuePair<Material, int>> materialNameMaterial = new Dictionary<string, KeyValuePair<Material, int>>();
-        private static Dictionary<Material, string> materialToName = new Dictionary<Material, string>();
-        public static Dictionary<Entity, SpriteSheetAnimator> entityAnimator = new Dictionary<Entity, SpriteSheetAnimator>();
+        private static Dictionary<string, KeyValuePair<Material, int>> materialNameMaterial;
+        private static Dictionary<Material, string> materialToName;
+        private static Dictionary<Entity, SpriteSheetAnimator> entityAnimator;
+
+        static SpriteSheetCache()
+        {
+            materialNameMaterial = new Dictionary<string, KeyValuePair<Material, int>>();
+            materialToName = new Dictionary<Material, string>();
+            entityAnimator = new Dictionary<Entity, SpriteSheetAnimator>();
+        }
 
         public static KeyValuePair<Material, float4[]> BakeSprites(Sprite[] sprites, string materialName)
         {
@@ -24,18 +31,19 @@ namespace ECSSpriteSheetAnimation
             for (int i = 0; i < sprites.Length; i++)
             {
                 var s = sprites[i];
-                float tilingX = 1f * (s.rect.width / w);
-                float tilingY = 1f * (s.rect.height / h);
-                float OffsetX = (s.rect.x / w);
-                float OffsetY = (s.rect.y / h);
-                uvs[i].x = tilingX;
-                uvs[i].y = tilingY;
-                uvs[i].z = OffsetX;
-                uvs[i].w = OffsetY;
+                uvs[i] = new float4(x: 1f * (s.rect.width / w),
+                                    y: 1f * (s.rect.height / h),
+                                    z: 1f * (s.rect.x / w),
+                                    w: 1f * (s.rect.y / h));
             }
             materialNameMaterial.Add(materialName, new KeyValuePair<Material, int>(material, sprites.Length));
             materialToName.Add(material, materialName);
             return new KeyValuePair<Material, float4[]>(material, uvs);
+        }
+
+        public static void AddAnimator(Entity entity, SpriteSheetAnimator animator)
+        {
+            entityAnimator.Add(entity, animator);
         }
 
         public static int TotalLength() => materialNameMaterial.Count;
@@ -49,5 +57,5 @@ namespace ECSSpriteSheetAnimation
         public static string GetMaterialName(Material material) => materialToName[material];
 
         public static int GetLength(Material material) => GetLength(GetMaterialName(material));
-    } 
+    }
 }

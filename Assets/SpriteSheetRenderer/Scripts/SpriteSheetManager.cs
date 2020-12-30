@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace ECSSpriteSheetAnimation
 {
-    public abstract class SpriteSheetManager
+    public static class SpriteSheetManager
     {
         private static EntityManager entityManager;
         public static List<RenderInformation> renderInformation = new List<RenderInformation>();
@@ -39,9 +39,9 @@ namespace ECSSpriteSheetAnimation
         {
             Entity e = EntityManager.CreateEntity(archetype);
             animator.currentAnimationIndex = animator.defaultAnimationIndex;
-            SpriteSheetAnimationData startAnim = animator.animations[animator.defaultAnimationIndex];
-            int maxSprites = startAnim.sprites.Length;
-            Material material = SpriteSheetCache.GetMaterial(animator.animations[animator.defaultAnimationIndex].animationName);
+            SpriteSheetAnimationClip startAnim = animator.animations[animator.defaultAnimationIndex];
+            int maxSprites = startAnim.FrameCount;
+            Material material = SpriteSheetCache.GetMaterial(animator.animations[animator.defaultAnimationIndex].AnimationName);
             int bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
             foreach (IComponentData Idata in componentDatas)
                 EntityManager.SetComponentData(e, (dynamic)Idata);
@@ -49,23 +49,23 @@ namespace ECSSpriteSheetAnimation
             var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
             BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
             EntityManager.SetComponentData(e, bh);
-            EntityManager.SetComponentData(e, new SpriteSheetAnimation { maxSprites = maxSprites, play = startAnim.playOnStart, samples = startAnim.samples, repetition = startAnim.repetition });
-            EntityManager.SetComponentData(e, new SpriteIndex { Value = startAnim.startIndex });
+            EntityManager.SetComponentData(e, new SpriteSheetAnimation { frameCount = maxSprites, framesPerSecond = startAnim.FramesPerSecond, playMode = startAnim.PlayMode });
+            EntityManager.SetComponentData(e, new SpriteIndex { Value = 0 });
             EntityManager.SetSharedComponentData(e, spriteSheetMaterial);
             animator.managedEntity = e;
-            SpriteSheetCache.entityAnimator.Add(e, animator);
+            SpriteSheetCache.AddAnimator(e, animator);
             return e;
         }
 
-        public static void SetAnimation(Entity e, SpriteSheetAnimationData animation)
+        public static void SetAnimation(Entity e, SpriteSheetAnimationClip animation)
         {
             int bufferEntityID = EntityManager.GetComponentData<BufferHook>(e).bufferEntityID;
             int bufferID = EntityManager.GetComponentData<BufferHook>(e).bufferID;
             Material oldMaterial = DynamicBufferManager.GetMaterial(bufferEntityID);
             string oldAnimation = SpriteSheetCache.GetMaterialName(oldMaterial);
-            if (animation.animationName != oldAnimation)
+            if (animation.AnimationName != oldAnimation)
             {
-                Material material = SpriteSheetCache.GetMaterial(animation.animationName);
+                Material material = SpriteSheetCache.GetMaterial(animation.AnimationName);
                 var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
 
                 DynamicBufferManager.RemoveBuffer(oldMaterial, bufferID);
@@ -77,17 +77,17 @@ namespace ECSSpriteSheetAnimation
                 EntityManager.SetSharedComponentData(e, spriteSheetMaterial);
                 EntityManager.SetComponentData(e, bh);
             }
-            EntityManager.SetComponentData(e, new SpriteSheetAnimation { maxSprites = animation.sprites.Length, play = animation.playOnStart, samples = animation.samples, repetition = animation.repetition, elapsedFrames = 0 });
-            EntityManager.SetComponentData(e, new SpriteIndex { Value = animation.startIndex });
+            EntityManager.SetComponentData(e, new SpriteSheetAnimation { frameCount = animation.Sprites.Length, framesPerSecond = animation.FramesPerSecond, playMode = animation.PlayMode, elapsedTime = 0 });
+            EntityManager.SetComponentData(e, new SpriteIndex { Value = 0 });
         }
 
-        public static void SetAnimation(EntityCommandBuffer commandBuffer, Entity e, SpriteSheetAnimationData animation, BufferHook hook)
+        public static void SetAnimation(EntityCommandBuffer commandBuffer, Entity e, SpriteSheetAnimationClip animation, BufferHook hook)
         {
             Material oldMaterial = DynamicBufferManager.GetMaterial(hook.bufferEntityID);
             string oldAnimation = SpriteSheetCache.GetMaterialName(oldMaterial);
-            if (animation.animationName != oldAnimation)
+            if (animation.AnimationName != oldAnimation)
             {
-                Material material = SpriteSheetCache.GetMaterial(animation.animationName);
+                Material material = SpriteSheetCache.GetMaterial(animation.AnimationName);
                 var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
 
                 //clean old buffer
@@ -100,8 +100,8 @@ namespace ECSSpriteSheetAnimation
                 commandBuffer.SetSharedComponent(e, spriteSheetMaterial);
                 commandBuffer.SetComponent(e, bh);
             }
-            commandBuffer.SetComponent(e, new SpriteSheetAnimation { maxSprites = animation.sprites.Length, play = animation.playOnStart, samples = animation.samples, repetition = animation.repetition, elapsedFrames = 0 });
-            commandBuffer.SetComponent(e, new SpriteIndex { Value = animation.startIndex });
+            commandBuffer.SetComponent(e, new SpriteSheetAnimation { frameCount = animation.FrameCount, framesPerSecond = animation.FramesPerSecond, playMode = animation.PlayMode, elapsedTime = 0 });
+            commandBuffer.SetComponent(e, new SpriteIndex { Value = 0 });
         }
 
         public static void UpdateEntity(Entity entity, IComponentData componentData)
@@ -140,9 +140,9 @@ namespace ECSSpriteSheetAnimation
 
         public static void RecordAnimator(SpriteSheetAnimator animator)
         {
-            foreach (SpriteSheetAnimationData animation in animator.animations)
+            foreach (SpriteSheetAnimationClip animation in animator.animations)
             {
-                KeyValuePair<Material, float4[]> atlasData = SpriteSheetCache.BakeSprites(animation.sprites, animation.animationName);
+                KeyValuePair<Material, float4[]> atlasData = SpriteSheetCache.BakeSprites(animation.Sprites, animation.AnimationName);
                 SpriteSheetMaterial material = new SpriteSheetMaterial { material = atlasData.Key };
                 DynamicBufferManager.GenerateBuffers(material);
                 DynamicBufferManager.BakeUvBuffer(material, atlasData);
@@ -156,11 +156,13 @@ namespace ECSSpriteSheetAnimation
                 renderInformation[i].DestroyBuffers();
             renderInformation.Clear();
         }
+
         public static void ReleaseUvBuffer(int bufferID)
         {
             if (renderInformation[bufferID].uvBuffer != null)
                 renderInformation[bufferID].uvBuffer.Release();
         }
+
         public static void ReleaseBuffer(int bufferID)
         {
             if (renderInformation[bufferID].matrixBuffer != null)
@@ -172,5 +174,5 @@ namespace ECSSpriteSheetAnimation
             if (renderInformation[bufferID].indexBuffer != null)
                 renderInformation[bufferID].indexBuffer.Release();
         }
-    } 
+    }
 }

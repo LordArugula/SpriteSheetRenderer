@@ -2,6 +2,7 @@
 using Unity.Burst;
 using Unity.Jobs;
 using UnityEngine;
+using Unity.Mathematics;
 
 namespace ECSSpriteSheetAnimation
 {
@@ -9,41 +10,52 @@ namespace ECSSpriteSheetAnimation
     {
         protected override void OnUpdate()
         {
+            float deltaTime = Time.DeltaTime;
             Dependency = Entities
                 .WithBurst()
                 .ForEach((ref SpriteSheetAnimation animation, ref SpriteIndex spriteIndex) =>
                 {
-                    if (animation.play && animation.elapsedFrames % animation.samples == 0 && animation.elapsedFrames != 0)
+                    float timePerFrame = 1 / animation.framesPerSecond;
+
+                    switch (animation.playMode)
                     {
-                        switch (animation.repetition)
+                        case PlayMode.Once:
                         {
-                            case SpriteSheetAnimation.RepetitionType.Once:
-                                if (spriteIndex.Value + 1 < animation.maxSprites)
-                                {
-                                    spriteIndex.Value += 1;
-                                }
-                                else
-                                {
-                                    animation.play = false;
-                                }
-                                break;
-                            case SpriteSheetAnimation.RepetitionType.Loop:
-                                spriteIndex.Value = spriteIndex.Value + 1 >= animation.maxSprites ? 0 : spriteIndex.Value + 1;
-                                break;
+                            animation.elapsedTime += deltaTime;
+                            float frameTime = animation.elapsedTime % timePerFrame;
+                            int elapsedFrames = (int)(animation.elapsedTime / timePerFrame);
+
+                            animation.elapsedTime = frameTime;
+                            spriteIndex.Value += elapsedFrames;
+                            if (spriteIndex.Value >= animation.frameCount)
+                            {
+                                animation.playMode = PlayMode.None;
+                                spriteIndex.Value = animation.frameCount - 1;
+                            }
+                            break;
                         }
-                        animation.elapsedFrames = 0;
-                    }
-                    else if (animation.play)
-                    {
-                        animation.elapsedFrames += 1;
+                        case PlayMode.Loop:
+                        {
+                            animation.elapsedTime += deltaTime;
+                            float frameTime = animation.elapsedTime % timePerFrame;
+                            int elapsedFrames = (int)(animation.elapsedTime / timePerFrame);
+
+                            animation.elapsedTime = frameTime;
+                            spriteIndex.Value = (spriteIndex.Value + elapsedFrames) % animation.frameCount;
+                            break;
+                        }
+                        case PlayMode.PingPong:
+                        {
+                            animation.elapsedTime += deltaTime;
+                            float t = animation.elapsedTime * animation.framesPerSecond;
+                            int l = animation.frameCount * 2;
+                            t = math.clamp(t - math.floor(t / l) * l, 0, l);
+                            spriteIndex.Value = (int)(animation.frameCount - math.abs(t - animation.frameCount));
+                            break;
+                        }
                     }
                 })
                 .ScheduleParallel(Dependency);
         }
-
-        public static bool NextWillReachEnd(SpriteSheetAnimation animation, SpriteIndex spriteIndex)
-        {
-            return spriteIndex.Value + 1 >= animation.maxSprites;
-        }
-    } 
+    }
 }
