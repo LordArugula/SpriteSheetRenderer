@@ -3,6 +3,7 @@
     "com.unity.2d.sprite": "1.0.0",
     "com.unity.burst": "1.4.3",
     "com.unity.collections": "0.14.0-preview.16",
+    "com.unity.dots.editor": "0.11.0-preview.3",
     "com.unity.entities": "0.16.0-preview.21",
     "com.unity.ide.visualstudio": "2.0.5",
     "com.unity.jobs": "0.7.0-preview.17",
