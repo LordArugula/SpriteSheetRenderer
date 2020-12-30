@@ -23,7 +23,7 @@ namespace ECSSpriteSheetAnimation.Examples
                 new Position2D { Value = bounds.xy },
                 new Scale { Value = bounds.z },
                 new SpriteIndex { Value = UnityEngine.Random.Range(0, maxSprites) },
-                new SpriteSheetAnimation { maxSprites = maxSprites, play = true, repetition = SpriteSheetAnimation.RepetitionType.Loop, samples = 10 },
+                new SpriteSheetAnimation { frameCount = maxSprites, playMode = PlayMode.Loop, framesPerSecond = 10 },
                 new SpriteSheetColor { color = new float4(color.r, color.g, color.b, color.a) }
             };
                 this.entity = SpriteSheetManager.Instantiate(FractalInitializer.archetype, components, "emoji");

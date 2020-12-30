@@ -7,7 +7,7 @@ namespace ECSSpriteSheetAnimation
     [System.Serializable]
     public abstract class SpriteSheetAnimator : ScriptableObject
     {
-        public SpriteSheetAnimationData[] animations;
+        public SpriteSheetAnimationClip[] animations;
         public int defaultAnimationIndex;
 
         [HideInInspector]
@@ -24,7 +24,7 @@ namespace ECSSpriteSheetAnimation
             for (int i = 0; i < animations.Length; i++)
             {
                 var animation = animations[i];
-                if (animation.animationName == animationName)
+                if (animation.AnimationName == animationName)
                 {
                     SpriteSheetManager.SetAnimation(managedEntity, animation);
                     currentAnimationIndex = i;
@@ -40,7 +40,7 @@ namespace ECSSpriteSheetAnimation
             for (int i = 0; i < animator.animations.Length; i++)
             {
                 var animation = animator.animations[i];
-                if (animation.animationName == animationName)
+                if (animation.AnimationName == animationName)
                 {
                     SpriteSheetManager.SetAnimation(e, animation);
                     animator.currentAnimationIndex = i;
@@ -56,7 +56,7 @@ namespace ECSSpriteSheetAnimation
             for (int i = 0; i < animator.animations.Length; i++)
             {
                 var animation = animator.animations[i];
-                if (animation.animationName == animationName)
+                if (animation.AnimationName == animationName)
                 {
                     SpriteSheetManager.SetAnimation(buffer, e, animation, hook);
                     animator.currentAnimationIndex = i;

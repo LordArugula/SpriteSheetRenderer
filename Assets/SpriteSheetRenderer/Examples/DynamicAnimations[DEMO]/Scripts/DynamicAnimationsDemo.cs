@@ -33,10 +33,10 @@ namespace ECSSpriteSheetAnimation.Examples
 
             // 3) Populate components
             List<IComponentData> components = new List<IComponentData> {
-            new Position2D { Value = float2.zero },
-            new Scale { Value = 5 },
-            new SpriteSheetColor { color = new float4(color.r, color.g, color.b, color.a) }
-        };
+                new Position2D { Value = float2.zero },
+                new Scale { Value = 5 },
+                new SpriteSheetColor { color = new float4(color.r, color.g, color.b, color.a) }
+            };
 
             // 4) Instantiate the entity
             character = SpriteSheetManager.Instantiate(archetype, components, animator);
