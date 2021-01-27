@@ -1,7 +1,4 @@
 ﻿using Unity.Entities;
-using Unity.Burst;
-using Unity.Jobs;
-using UnityEngine;
 using Unity.Mathematics;
 
 namespace ECSSpriteSheetAnimation
@@ -15,12 +12,11 @@ namespace ECSSpriteSheetAnimation
                 .WithBurst()
                 .ForEach((ref SpriteSheetAnimation animation, ref SpriteIndex spriteIndex) =>
                 {
-                    float timePerFrame = 1 / animation.framesPerSecond;
-
                     switch (animation.playMode)
                     {
                         case PlayMode.Once:
                         {
+                            float timePerFrame = 1 / animation.framesPerSecond;
                             animation.elapsedTime += deltaTime;
                             float frameTime = animation.elapsedTime % timePerFrame;
                             int elapsedFrames = (int)(animation.elapsedTime / timePerFrame);
@@ -36,6 +32,7 @@ namespace ECSSpriteSheetAnimation
                         }
                         case PlayMode.Loop:
                         {
+                            float timePerFrame = 1 / animation.framesPerSecond;
                             animation.elapsedTime += deltaTime;
                             float frameTime = animation.elapsedTime % timePerFrame;
                             int elapsedFrames = (int)(animation.elapsedTime / timePerFrame);

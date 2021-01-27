@@ -1,14 +1,13 @@
-﻿using System.Collections.Generic;
-using Unity.Entities;
+﻿using Unity.Entities;
 using UnityEngine;
 
 namespace ECSSpriteSheetAnimation
 {
-    [System.Serializable]
-    public abstract class SpriteSheetAnimator : ScriptableObject
+    [CreateAssetMenu(menuName = "SpriteSheetRenderer/SpriteSheetAnimator")]
+    public class SpriteSheetAnimator : ScriptableObject
     {
         public SpriteSheetAnimationClip[] animations;
-        public int defaultAnimationIndex;
+        public int defaultAnimationClipIndex;
 
         [HideInInspector]
         public int currentAnimationIndex = 0;
@@ -32,6 +31,7 @@ namespace ECSSpriteSheetAnimation
                 }
             }
         }
+
         public static void Play(Entity e, string animationName = null)
         {
             SpriteSheetAnimator animator = SpriteSheetCache.GetAnimator(e);
@@ -48,6 +48,7 @@ namespace ECSSpriteSheetAnimation
                 }
             }
         }
+
         public static void Play(EntityCommandBuffer buffer, Entity e, BufferHook hook, string animationName = null)
         {
             SpriteSheetAnimator animator = SpriteSheetCache.GetAnimator(e);

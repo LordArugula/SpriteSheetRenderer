@@ -1,8 +1,10 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
-using UnityEngine;
 
-public struct SpriteMatrix : IComponentData
+namespace ECSSpriteSheetAnimation
 {
-    public float4 matrix;
+    public struct SpriteMatrix : IComponentData
+    {
+        public float4 matrix;
+    } 
 }

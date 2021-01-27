@@ -1,7 +1,10 @@
 ﻿using Unity.Entities;
 
-public struct BufferHook : IComponentData
+namespace ECSSpriteSheetAnimation
 {
-    public int bufferID;
-    public int bufferEntityID;
+    public struct BufferHook : IComponentData
+    {
+        public int bufferID;
+        public int bufferEntityID;
+    } 
 }

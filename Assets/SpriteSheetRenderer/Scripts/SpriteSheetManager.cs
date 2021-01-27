@@ -38,10 +38,9 @@ namespace ECSSpriteSheetAnimation
         public static Entity Instantiate(EntityArchetype archetype, List<IComponentData> componentDatas, SpriteSheetAnimator animator)
         {
             Entity e = EntityManager.CreateEntity(archetype);
-            animator.currentAnimationIndex = animator.defaultAnimationIndex;
-            SpriteSheetAnimationClip startAnim = animator.animations[animator.defaultAnimationIndex];
+            SpriteSheetAnimationClip startAnim = animator.animations[animator.defaultAnimationClipIndex];
             int maxSprites = startAnim.FrameCount;
-            Material material = SpriteSheetCache.GetMaterial(animator.animations[animator.defaultAnimationIndex].AnimationName);
+            Material material = SpriteSheetCache.GetMaterial(animator.animations[animator.defaultAnimationClipIndex].AnimationName);
             int bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
             foreach (IComponentData Idata in componentDatas)
                 EntityManager.SetComponentData(e, (dynamic)Idata);
@@ -104,14 +103,16 @@ namespace ECSSpriteSheetAnimation
             commandBuffer.SetComponent(e, new SpriteIndex { Value = 0 });
         }
 
-        public static void UpdateEntity(Entity entity, IComponentData componentData)
+        public static void UpdateEntity<T>(Entity entity, T componentData) 
+            where T : struct, IComponentData
         {
-            EntityManager.SetComponentData(entity, (dynamic)componentData);
+            EntityManager.SetComponentData(entity, componentData);
         }
 
-        public static void UpdateEntity(EntityCommandBuffer commandBuffer, Entity entity, IComponentData componentData)
+        public static void UpdateEntity<T>(EntityCommandBuffer commandBuffer, Entity entity, T componentData)
+            where T : struct, IComponentData
         {
-            commandBuffer.SetComponent(entity, (dynamic)componentData);
+            commandBuffer.SetComponent(entity, componentData);
         }
 
         public static void DestroyEntity(Entity e, string materialName)

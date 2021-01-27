@@ -1,4 +1,6 @@
 ﻿using Unity.Entities;
-using Unity.Mathematics;
 
-public struct SpriteSheetTag : IComponentData { }
+namespace ECSSpriteSheetAnimation
+{
+    public struct SpriteSheetTag : IComponentData { } 
+}
