@@ -1,7 +1,4 @@
 ﻿using Unity.Entities;
-using Unity.Burst;
-using Unity.Jobs;
-using Unity.Collections;
 using Unity.Transforms;
 
 namespace ECSSpriteSheetAnimation

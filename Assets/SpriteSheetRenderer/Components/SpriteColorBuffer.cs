@@ -1,10 +1,14 @@
 ﻿using Unity.Entities;
 using Unity.Mathematics;
 
-[InternalBufferCapacity(8)]
-public struct SpriteColorBuffer : IBufferElementData
+namespace ECSSpriteSheetAnimation
 {
-    public static implicit operator float4(SpriteColorBuffer e) { return e.color; }
-    public static implicit operator SpriteColorBuffer(float4 e) { return new SpriteColorBuffer { color = e }; }
-    public float4 color;
+    [InternalBufferCapacity(8)]
+    public struct SpriteColorBuffer : IBufferElementData
+    {
+        public float4 color;
+
+        public static implicit operator float4(SpriteColorBuffer e) { return e.color; }
+        public static implicit operator SpriteColorBuffer(float4 e) { return new SpriteColorBuffer { color = e }; }
+    } 
 }

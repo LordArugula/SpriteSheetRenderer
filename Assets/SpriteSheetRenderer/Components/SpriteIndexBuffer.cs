@@ -1,13 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using Unity.Entities;
-using Unity.Mathematics;
-using UnityEngine;
+﻿using Unity.Entities;
 
-[InternalBufferCapacity(sizeof(int))]
-public struct SpriteIndexBuffer : IBufferElementData
+namespace ECSSpriteSheetAnimation
 {
-    public static implicit operator int(SpriteIndexBuffer e) { return e.index; }
-    public static implicit operator SpriteIndexBuffer(int e) { return new SpriteIndexBuffer { index = e }; }
-    public int index;
+    [InternalBufferCapacity(sizeof(int))]
+    public struct SpriteIndexBuffer : IBufferElementData
+    {
+        public int index;
+
+        public static implicit operator int(SpriteIndexBuffer e) { return e.index; }
+        public static implicit operator SpriteIndexBuffer(int e) { return new SpriteIndexBuffer { index = e }; }
+    } 
 }
