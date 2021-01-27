@@ -38,10 +38,9 @@ namespace ECSSpriteSheetAnimation
         public static Entity Instantiate(EntityArchetype archetype, List<IComponentData> componentDatas, SpriteSheetAnimator animator)
         {
             Entity e = EntityManager.CreateEntity(archetype);
-            animator.currentAnimationIndex = animator.defaultAnimationIndex;
-            SpriteSheetAnimationClip startAnim = animator.animations[animator.defaultAnimationIndex];
+            SpriteSheetAnimationClip startAnim = animator.animations[animator.defaultAnimationClipIndex];
             int maxSprites = startAnim.FrameCount;
-            Material material = SpriteSheetCache.GetMaterial(animator.animations[animator.defaultAnimationIndex].AnimationName);
+            Material material = SpriteSheetCache.GetMaterial(animator.animations[animator.defaultAnimationClipIndex].AnimationName);
             int bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
             foreach (IComponentData Idata in componentDatas)
                 EntityManager.SetComponentData(e, (dynamic)Idata);
