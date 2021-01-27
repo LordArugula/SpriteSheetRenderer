@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace ECSSpriteSheetAnimation
 {
-    [CreateAssetMenu(menuName = "Sprite Sheet Rendere/Animator")]
+    [CreateAssetMenu(menuName = "Sprite Sheet Renderer/Animator")]
     public class SpriteSheetAnimator : ScriptableObject
     {
         public SpriteSheetAnimationClip[] animations;
