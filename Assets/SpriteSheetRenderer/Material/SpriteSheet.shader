@@ -59,7 +59,7 @@
                 //rotate the vertex
                 v.vertex = mul(v.vertex-float4(0.5,0.5,0,0),rotationZMatrix(transform.z));
                 //scale it
-                float3 worldPosition = float3(transform.x,transform.y,-transform.y/10) + (v.vertex.xyz * transform.w);
+                float3 worldPosition = float3(transform.x, transform.y, transform.y) + (v.vertex.xyz * transform.w);
                 v2f o;
                 o.pos = UnityObjectToClipPos(float4(worldPosition, 1.0f));
                 o.uv =  v.texcoord * uv.xy + uv.zw;
