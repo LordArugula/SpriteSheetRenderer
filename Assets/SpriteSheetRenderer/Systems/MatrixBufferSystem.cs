@@ -16,10 +16,7 @@ namespace ECSSpriteSheetAnimation
                     .WithNativeDisableContainerSafetyRestriction(buffer)
                     .ForEach((in SpriteMatrix spriteMatrix, in BufferHook bufferHook) =>
                     {
-                        if (bufferID == bufferHook.bufferEntityID)
-                        {
-                            buffer[bufferHook.bufferID] = spriteMatrix.matrix;
-                        }
+                        buffer[bufferHook.bufferID] = spriteMatrix.matrix;
                     })
                     .ScheduleParallel(Dependency);
             }

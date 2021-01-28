@@ -26,7 +26,7 @@ namespace ECSSpriteSheetAnimation
             Material material = SpriteSheetCache.GetMaterial(spriteSheetName);
             int bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
             foreach (IComponentData Idata in componentDatas)
-                EntityManager.SetComponentData(e, (dynamic)Idata);
+                EntityManager.SetComponentData(e, Idata);
 
             var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
             BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
@@ -43,7 +43,7 @@ namespace ECSSpriteSheetAnimation
             Material material = SpriteSheetCache.GetMaterial(animator.animations[animator.defaultAnimationClipIndex].AnimationName);
             int bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
             foreach (IComponentData Idata in componentDatas)
-                EntityManager.SetComponentData(e, (dynamic)Idata);
+                EntityManager.SetComponentData(e, Idata);
 
             var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
             BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
