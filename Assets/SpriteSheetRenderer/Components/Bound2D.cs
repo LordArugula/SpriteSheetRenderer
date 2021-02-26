@@ -3,6 +3,7 @@ using Unity.Mathematics;
 
 namespace ECSSpriteSheetAnimation
 {
+    [GenerateAuthoringComponent]
     public struct Bound2D : IComponentData
     {
         public float2 position;

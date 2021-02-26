@@ -2,6 +2,7 @@
 
 namespace ECSSpriteSheetAnimation
 {
+    [GenerateAuthoringComponent]
     public struct SpriteSheetAnimation : IComponentData
     {
         public PlayMode playMode;

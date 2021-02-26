@@ -2,6 +2,7 @@
 
 namespace ECSSpriteSheetAnimation
 {
+    [GenerateAuthoringComponent]
     public struct BufferHook : IComponentData
     {
         public int bufferID;

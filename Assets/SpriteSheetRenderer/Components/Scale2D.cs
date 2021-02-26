@@ -2,6 +2,7 @@
 
 namespace ECSSpriteSheetAnimation
 {
+    [GenerateAuthoringComponent]
     public struct Scale2D : IComponentData
     {
         public float x;
