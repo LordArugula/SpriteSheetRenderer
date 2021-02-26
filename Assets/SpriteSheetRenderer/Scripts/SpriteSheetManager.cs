@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace ECSSpriteSheetAnimation
 {
@@ -130,11 +131,32 @@ namespace ECSSpriteSheetAnimation
             DynamicBufferManager.RemoveBuffer(material, hook.bufferID);
         }
 
-        public static void RecordSpriteSheet(Sprite[] sprites, string spriteSheetName, int spriteCount = 0)
+        /// <summary>
+        /// Create a sprite sheet from <paramref name="sprites"/>
+        /// </summary>
+        /// <param name="sprites">sprites to use for sprite sheet</param>
+        /// <param name="spriteSheetName">key to use to find sprite sheet later</param>
+        /// <param name="entityCount">amount of entities that will use this sprite sheet, this can be expanded later using <see cref="DynamicBufferManager.GenerateBuffers"/></param>
+        public static void RecordSpriteSheet(Sprite[] sprites, string spriteSheetName, int entityCount = 0)
         {
             KeyValuePair<Material, float4[]> atlasData = SpriteSheetCache.BakeSprites(sprites, spriteSheetName);
             SpriteSheetMaterial material = new SpriteSheetMaterial { material = atlasData.Key };
-            DynamicBufferManager.GenerateBuffers(material, spriteCount);
+            DynamicBufferManager.GenerateBuffers(material, entityCount);
+            DynamicBufferManager.BakeUvBuffer(material, atlasData);
+            renderInformation.Add(new RenderInformation(material.material, DynamicBufferManager.GetEntityBuffer(material.material)));
+        }
+
+        /// <summary>
+        /// Create a sprite sheet from <paramref name="sprites"/>
+        /// </summary>
+        /// <param name="sprites">spritesAtlas to use for sprite sheet</param>
+        /// <param name="spriteSheetName">key to use to find sprite sheet later</param>
+        /// <param name="entityCount">amount of entities that will use this sprite sheet, this can be expanded later using <see cref="DynamicBufferManager.GenerateBuffers"/></param>
+        public static void RecordSpriteSheet(SpriteAtlas sprites, string spriteSheetName, int entityCount = 0)
+        {
+            KeyValuePair<Material, float4[]> atlasData = SpriteSheetCache.BakeSprites(sprites, spriteSheetName);
+            SpriteSheetMaterial material = new SpriteSheetMaterial { material = atlasData.Key };
+            DynamicBufferManager.GenerateBuffers(material, entityCount);
             DynamicBufferManager.BakeUvBuffer(material, atlasData);
             renderInformation.Add(new RenderInformation(material.material, DynamicBufferManager.GetEntityBuffer(material.material)));
         }
