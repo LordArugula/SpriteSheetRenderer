@@ -2,6 +2,7 @@
 
 namespace ECSSpriteSheetAnimation
 {
+    [UpdateInGroup(groupType: typeof(SpriteSheetPreperationGroup))]
     public class SpriteSheetPositionSystem : SystemBase
     {
         protected override void OnUpdate()

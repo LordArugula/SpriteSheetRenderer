@@ -30,7 +30,7 @@ namespace ECSSpriteSheetAnimation
                 EntityManager.SetComponentData(e, Idata);
 
             var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
-            BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+            BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
             EntityManager.SetComponentData(e, bh);
             EntityManager.SetSharedComponentData(e, spriteSheetMaterial);
             return e;
@@ -47,7 +47,7 @@ namespace ECSSpriteSheetAnimation
                 EntityManager.SetComponentData(e, Idata);
 
             var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
-            BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+            BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
             EntityManager.SetComponentData(e, bh);
             EntityManager.SetComponentData(e, new SpriteSheetAnimation { frameCount = maxSprites, framesPerSecond = startAnim.FramesPerSecond, playMode = startAnim.PlayMode });
             EntityManager.SetComponentData(e, new SpriteIndex { Value = 0 });
@@ -59,7 +59,7 @@ namespace ECSSpriteSheetAnimation
 
         public static void SetAnimation(Entity e, SpriteSheetAnimationClip animation)
         {
-            int bufferEntityID = EntityManager.GetComponentData<BufferHook>(e).bufferEntityID;
+            int bufferEntityID = EntityManager.GetComponentData<BufferHook>(e).entityID;
             int bufferID = EntityManager.GetComponentData<BufferHook>(e).bufferID;
             Material oldMaterial = DynamicBufferManager.GetMaterial(bufferEntityID);
             string oldAnimation = SpriteSheetCache.GetMaterialName(oldMaterial);
@@ -72,7 +72,7 @@ namespace ECSSpriteSheetAnimation
 
                 //use new buffer
                 bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
-                BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+                BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
 
                 EntityManager.SetSharedComponentData(e, spriteSheetMaterial);
                 EntityManager.SetComponentData(e, bh);
@@ -83,7 +83,7 @@ namespace ECSSpriteSheetAnimation
 
         public static void SetAnimation(EntityCommandBuffer commandBuffer, Entity e, SpriteSheetAnimationClip animation, BufferHook hook)
         {
-            Material oldMaterial = DynamicBufferManager.GetMaterial(hook.bufferEntityID);
+            Material oldMaterial = DynamicBufferManager.GetMaterial(hook.entityID);
             string oldAnimation = SpriteSheetCache.GetMaterialName(oldMaterial);
             if (animation.AnimationName != oldAnimation)
             {
@@ -95,7 +95,7 @@ namespace ECSSpriteSheetAnimation
 
                 //use new buffer
                 int bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
-                BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+                BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
 
                 commandBuffer.SetSharedComponent(e, spriteSheetMaterial);
                 commandBuffer.SetComponent(e, bh);
@@ -127,7 +127,7 @@ namespace ECSSpriteSheetAnimation
         public static void DestroyEntity(EntityCommandBuffer commandBuffer, Entity e, BufferHook hook)
         {
             commandBuffer.DestroyEntity(e);
-            Material material = DynamicBufferManager.GetMaterial(hook.bufferEntityID);
+            Material material = DynamicBufferManager.GetMaterial(hook.entityID);
             DynamicBufferManager.RemoveBuffer(material, hook.bufferID);
         }
 

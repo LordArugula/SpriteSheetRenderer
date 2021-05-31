@@ -4,7 +4,6 @@ using System;
 
 namespace ECSSpriteSheetAnimation
 {
-    [GenerateAuthoringComponent]
     public struct SpriteSheetMaterial : ISharedComponentData, IEquatable<SpriteSheetMaterial>
     {
         public Material material;

@@ -87,6 +87,8 @@ namespace ECSSpriteSheetAnimation
 
         public static int GetLength(string spriteSheetName) => materialNameMaterial[spriteSheetName].Value;
 
+        public static bool HasMaterial(string spriteSheetName) => materialNameMaterial.ContainsKey(spriteSheetName);
+        
         public static Material GetMaterial(string spriteSheetName) => materialNameMaterial[spriteSheetName].Key;
 
         public static SpriteSheetAnimator GetAnimator(Entity e) => entityAnimator[e];

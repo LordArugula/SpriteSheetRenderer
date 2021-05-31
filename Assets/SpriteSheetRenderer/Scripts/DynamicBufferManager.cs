@@ -69,8 +69,11 @@ namespace ECSSpriteSheetAnimation
             materialEntityBufferID.Add(material.material, materialEntityBufferID.Count);
         }
 
-        //when u create a new entity you need a new buffer for him
-        //use this to add new dynamicbuffer
+        /// <summary>
+        /// when you create a new entity you need a new buffer for it in order for Rendering to work correctly 
+        /// </summary>
+        /// <param name="bufferEntity">Buffer </param>
+        /// <param name="entityCount">Total amount of entities that will use this buffer</param>
         public static void MassAddBuffers(Entity bufferEntity, int entityCount)
         {
             var indexBuffer = EntityManager.GetBuffer<SpriteIndexBuffer>(bufferEntity);
@@ -101,7 +104,7 @@ namespace ECSSpriteSheetAnimation
 
         public static BufferHook GetBufferHook(SpriteSheetMaterial material)
         {
-            return new BufferHook { bufferEntityID = materialEntityBufferID[material.material], bufferID = NextIDForEntity(material.material) };
+            return new BufferHook { entityID = materialEntityBufferID[material.material], bufferID = NextIDForEntity(material.material) };
         }
 
         public static int GetEntityBufferID(SpriteSheetMaterial material)
