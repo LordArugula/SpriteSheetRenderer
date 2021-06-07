@@ -15,6 +15,11 @@ namespace ECSSpriteSheetAnimation
         public Material material;
         public uint[] args;
         public bool updateUvs;
+        
+        /// <summary>
+        /// Area in world space that sprites using this material are covering
+        /// </summary>
+        public Bounds bounds;
 
         public RenderInformation(Material material, Entity bufferEntity)
         {

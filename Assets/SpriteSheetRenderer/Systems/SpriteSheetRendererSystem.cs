@@ -25,11 +25,12 @@ namespace ECSSpriteSheetAnimation
             {
                 if (UpdateBuffers(i) > 0)
                 {
-                    Graphics.DrawMeshInstancedIndirect(mesh,
-                                                       0,
-                                                       SpriteSheetManager.renderInformation[i].material,
-                                                       new Bounds(Vector3.zero, Vector3.one),
-                                                       SpriteSheetManager.renderInformation[i].argsBuffer);
+                    Graphics.DrawMeshInstancedIndirect(
+                        mesh,
+                        0, 
+                        SpriteSheetManager.renderInformation[i].material,
+                        SpriteSheetManager.renderInformation[i].bounds,
+                        SpriteSheetManager.renderInformation[i].argsBuffer);
                 }
 
                 //this is w.i.p to clean the old buffers
