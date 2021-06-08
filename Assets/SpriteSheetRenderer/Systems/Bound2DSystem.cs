@@ -31,18 +31,21 @@ namespace ECSSpriteSheetAnimation
         private void CalculateMaterialBounds()
         {
             int bufferCount = DynamicBufferManager.GetIndexBuffers().Length;
-            NativeArray<JobHandle> handles = new NativeArray<JobHandle>(bufferCount, Allocator.TempJob);
+            JobHandle[] handles = new JobHandle[bufferCount];
             NativeReference<float2x2>[] materialBounds = new NativeReference<float2x2>[bufferCount];
+            
+            // calculate world space bounds
             for (int bufferID = 0; bufferID < bufferCount; bufferID++)
             {
                 Material material = DynamicBufferManager.GetMaterial(bufferID);
-                int localID = bufferID;
                 
-                NativeReference<float2x2> localBounds = materialBounds[localID] = 
-                    new NativeReference<float2x2>(new float2x2(new float2(float.MaxValue), new float2(float.MinValue)), Allocator.TempJob);
+                materialBounds[bufferID] = new NativeReference<float2x2>(
+                    new float2x2(new float2(float.MaxValue), new float2(float.MinValue)),
+                    Allocator.TempJob);
+                NativeReference<float2x2> localBounds = materialBounds[bufferID]; 
                 handles[bufferID] = Entities
                     .WithBurst()
-                    .WithSharedComponentFilter(new SpriteSheetMaterial() {material = material})
+                    .WithSharedComponentFilter(new SpriteSheetMaterial {material = material})
                     .ForEach((ref Bound2D bounds) =>
                     {
                         float2x2 value = localBounds.Value;
@@ -55,8 +58,13 @@ namespace ECSSpriteSheetAnimation
                         localBounds.Value = value;
                     })
                     .Schedule(Dependency);
+
+#if UNITY_ASSERTIONS
+                handles[bufferID].Complete(); // todo remove when unity likes shared component filter with concurrently scheduled jobs
+#endif
             }
 
+            // apply bounds to rendering data
             for (int bufferID = 0; bufferID < bufferCount; bufferID++)
             {
                 handles[bufferID].Complete();
@@ -75,8 +83,6 @@ namespace ECSSpriteSheetAnimation
 
                 materialBounds[bufferID].Dispose();
             }
-
-            handles.Dispose();
         }
     } 
 }
