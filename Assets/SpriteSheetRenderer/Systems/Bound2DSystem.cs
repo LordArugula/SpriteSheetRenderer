@@ -70,16 +70,34 @@ namespace ECSSpriteSheetAnimation
                 handles[bufferID].Complete();
 
                 float2x2 bounds = materialBounds[bufferID].Value;
+                
                 Vector3 size = new Vector3(
                     math.abs(bounds[1].x - bounds[0].x),
                     math.abs(bounds[1].y - bounds[0].y),
                     0f);
-                SpriteSheetManager.renderInformation[bufferID].bounds = new Bounds(
+                /*Bounds bufferBounds = new Bounds(
                     new Vector3(
                         bounds[0].x + (size.x / 2),
                         bounds[0].y + (size.y / 2),
                         0f),
-                    size);
+                    size);*/
+                
+                // the code commented out above will produce a perfect bounding box but has issues with ofsetting the rendered output
+                // inside the render system when using it in the "Graphics.DrawMeshInstancedIndirect" call
+                Bounds bufferBounds = new Bounds(
+                    new Vector3(0f, 0f, 0f),
+                    new Vector3(
+                        (bounds[0].x + size.x) * 2,
+                        (bounds[0].y + size.y) * 2,
+                        0f));
+                SpriteSheetManager.renderInformation[bufferID].bounds = bufferBounds;
+                
+#if DEBUG && false
+                Debug.DrawLine(new Vector3(bufferBounds.min.x, bufferBounds.min.y, 0), new Vector3(bufferBounds.max.x, bufferBounds.min.y, 0));
+                Debug.DrawLine(new Vector3(bufferBounds.max.x, bufferBounds.min.y, 0), new Vector3(bufferBounds.max.x, bufferBounds.max.y, 0));
+                Debug.DrawLine(new Vector3(bufferBounds.max.x, bufferBounds.max.y, 0), new Vector3(bufferBounds.min.x, bufferBounds.max.y, 0));
+                Debug.DrawLine(new Vector3(bufferBounds.min.x, bufferBounds.max.y, 0), new Vector3(bufferBounds.min.x, bufferBounds.min.y, 0));
+#endif
 
                 materialBounds[bufferID].Dispose();
             }

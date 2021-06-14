@@ -26,11 +26,8 @@ namespace ECSSpriteSheetAnimation
             this.material = material;
             spriteCount = SpriteSheetCache.GetLength(material);
             this.bufferEntity = bufferEntity;
-            args = new uint[5] { 0, 0, 0, 0, 0 };
+            args = new uint[5] { 6, 0, 0, 0, 0 };
             argsBuffer = new ComputeBuffer(1, args.Length * sizeof(uint), ComputeBufferType.IndirectArguments);
-            // those args are always the same since we always use the same mesh
-            args[0] = (uint)6;
-            args[2] = args[3] = (uint)0;
             updateUvs = true;
         }
 
