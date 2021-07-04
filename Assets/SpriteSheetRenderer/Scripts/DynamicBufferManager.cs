@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.IO;
 using Unity.Entities;
 using UnityEngine;
 using Unity.Mathematics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace ECSSpriteSheetAnimation
 {
@@ -29,7 +31,8 @@ namespace ECSSpriteSheetAnimation
         //contains the index of a bufferEntity inside the bufferEntities from a material
         private static Dictionary<Material, int> materialEntityBufferID = new Dictionary<Material, int>();
 
-        private static Dictionary<Material, List<int>> availableEntityID = new Dictionary<Material, List<int>>();
+        private static Dictionary<Material, HashSet<int>> availableEntityID = new Dictionary<Material, HashSet<int>>();
+        private static Dictionary<Material, bool> contiguousEntityID = new Dictionary<Material, bool>();
 
         //only use this when you didn't bake the uv yet
         public static void BakeUvBuffer(SpriteSheetMaterial spriteSheetMaterial, KeyValuePair<Material, float4[]> atlasData)
@@ -45,9 +48,10 @@ namespace ECSSpriteSheetAnimation
             if (!materialEntityBufferID.ContainsKey(material.material))
             {
                 CreateBuffersContainer(material);
-                availableEntityID.Add(material.material, new List<int>());
+                availableEntityID.Add(material.material, new HashSet<int>());
                 for (int i = 0; i < entityCount; i++)
                     availableEntityID[material.material].Add(i);
+                contiguousEntityID.Add(material.material, true);
                 MassAddBuffers(bufferEntities.Last(), entityCount);
             }
         }
@@ -87,6 +91,8 @@ namespace ECSSpriteSheetAnimation
             }
         }
 
+        
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int AddDynamicBuffers(Entity bufferEntity, Material material)
         {
             int bufferId = NextIDForEntity(material);
@@ -120,10 +126,31 @@ namespace ECSSpriteSheetAnimation
         public static int NextIDForEntity(Material material)
         {
             var ids = availableEntityID[material];
-            var availableIds = Enumerable.Range(0, ids.Count + 1).Except(ids);
-            int smallerID = availableIds.First();
-            ids.Add(smallerID);
-            return smallerID;
+            if(contiguousEntityID[material])
+            {
+                int newId = ids.Count;
+                ids.Add(newId);
+                return newId;
+            }
+            
+            // todo maybe storing free'd Ids so they are cheap to reuse would be a good idea in the RemoveBuffer method...
+            for (int i = 0; i <= ids.Count; i++)
+            {
+                if(!ids.Contains(i))
+                {
+                    if(i == ids.Count)
+                    {
+                        // this item is outside the existing ids which means that the existing ids are all in use, so cache this knowledge so the
+                        // next id doesn't have to do this horrible linear search 
+                        contiguousEntityID[material] = true;
+                    }
+                    
+                    ids.Add(i);
+                    return i;
+                }
+            }
+
+            throw new InvalidDataException("Failed to find valid ID for Entity!");
         }
 
         public static Material GetMaterial(int bufferEntityID)
@@ -137,6 +164,7 @@ namespace ECSSpriteSheetAnimation
         public static void RemoveBuffer(Material material, int bufferID)
         {
             Entity bufferEntity = GetEntityBuffer(material);
+            contiguousEntityID[material] = contiguousEntityID[material] && availableEntityID[material].Count == bufferID; 
             availableEntityID[material].Remove(bufferID);
             CleanBuffer(bufferID, bufferEntity);
         }
