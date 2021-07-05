@@ -1,17 +1,43 @@
-﻿using Unity.Collections;
+﻿using Unity.Burst;
+using Unity.Collections;
+using Unity.Collections.LowLevel.Unsafe;
 using Unity.Entities;
 using Unity.Jobs;
+using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
 using Unity.Transforms;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace ECSSpriteSheetAnimation
 {
     [UpdateInGroup(groupType: typeof(SpriteSheetPreperationGroup))]
     public class Bound2DSystem : SystemBase
     {
+        private EntityQuery m_jobQuery;
+
+        protected override void OnStartRunning()
+        {
+            m_jobQuery = EntityManager.CreateEntityQuery(
+                ComponentType.ReadOnly(typeof(Bound2D)),
+                ComponentType.ReadOnly(typeof(SpriteSheetMaterial)));
+            base.OnStartRunning();
+        }
+
+        protected override void OnStopRunning()
+        {
+            m_jobQuery.Dispose();
+            base.OnStopRunning();
+        }
+
         protected override void OnUpdate()
         {
+            int bufferCount = DynamicBufferManager.GetIndexBuffers().Length;
+            JobHandle[] handles = new JobHandle[bufferCount];
+            BoundsCheckJob[] materialBounds = new BoundsCheckJob[bufferCount];
+            
+            CalculateMaterialBoundsBegin(ref handles, ref materialBounds);
+            
             // update buffer data
             Dependency = Entities
                 .WithBurst()
@@ -22,54 +48,36 @@ namespace ECSSpriteSheetAnimation
                 })
                 .ScheduleParallel(Dependency);
             
-            CalculateMaterialBounds();
+            CalculateMaterialBoundsEnd(ref handles, ref materialBounds);
+        }
+
+        /// <summary>
+        /// Schedule the bounds calculations for <see cref="SpriteSheetRendererSystem"/> to work correctly with a moving camera for each sprite material
+        /// </summary>
+        private void CalculateMaterialBoundsBegin(ref JobHandle[] handles, ref BoundsCheckJob[] materialBounds)
+        {
+            for (int bufferID = 0; bufferID < handles.Length; bufferID++)
+            {
+                Material material = DynamicBufferManager.GetMaterial(bufferID); 
+                m_jobQuery.SetSharedComponentFilter(new SpriteSheetMaterial(){material = material});
+
+                materialBounds[bufferID] = new BoundsCheckJob(m_jobQuery);
+                handles[bufferID] = materialBounds[bufferID].Schedule(materialBounds[bufferID].Ready);
+            }
         }
 
         /// <summary>
         /// Work out the bounds for <see cref="SpriteSheetRendererSystem"/> to work correctly with a moving camera for each sprite material
         /// </summary>
-        private void CalculateMaterialBounds()
+        private void CalculateMaterialBoundsEnd(ref JobHandle[] handles, ref BoundsCheckJob[] materialBounds)
         {
-            int bufferCount = DynamicBufferManager.GetIndexBuffers().Length;
-            JobHandle[] handles = new JobHandle[bufferCount];
-            NativeReference<float2x2>[] materialBounds = new NativeReference<float2x2>[bufferCount];
-            
-            // calculate world space bounds
-            for (int bufferID = 0; bufferID < bufferCount; bufferID++)
-            {
-                Material material = DynamicBufferManager.GetMaterial(bufferID);
-                
-                materialBounds[bufferID] = new NativeReference<float2x2>(
-                    new float2x2(new float2(float.MaxValue), new float2(float.MinValue)),
-                    Allocator.TempJob);
-                NativeReference<float2x2> localBounds = materialBounds[bufferID]; 
-                handles[bufferID] = Entities
-                    .WithBurst()
-                    .WithSharedComponentFilter(new SpriteSheetMaterial {material = material})
-                    .ForEach((ref Bound2D bounds) =>
-                    {
-                        float2x2 value = localBounds.Value;
-                        float2 relativeScale = bounds.scale / 2f;
-                        // todo need to check if Position2D represents one of the sprite corners or the center (I assume center in this code) 
-                        value[0].x = math.min(value[0].x, bounds.position.x - relativeScale.x);
-                        value[0].y = math.min(value[0].y, bounds.position.y - relativeScale.y);
-                        value[1].x = math.max(value[1].x, bounds.position.x + relativeScale.x);
-                        value[1].y = math.max(value[1].y, bounds.position.y + relativeScale.y);
-                        localBounds.Value = value;
-                    })
-                    .Schedule(Dependency);
-
-#if UNITY_ASSERTIONS
-                handles[bufferID].Complete(); // todo remove when unity likes shared component filter with concurrently scheduled jobs
-#endif
-            }
-
             // apply bounds to rendering data
-            for (int bufferID = 0; bufferID < bufferCount; bufferID++)
+            for (int bufferID = 0; bufferID < handles.Length; bufferID++)
             {
                 handles[bufferID].Complete();
 
-                float2x2 bounds = materialBounds[bufferID].Value;
+                float2x2 bounds = materialBounds[bufferID].CalculatedBounds;
+                materialBounds[bufferID].Dispose();
                 
                 Vector3 size = new Vector3(
                     math.abs(bounds[1].x - bounds[0].x),
@@ -98,8 +106,73 @@ namespace ECSSpriteSheetAnimation
                 Debug.DrawLine(new Vector3(bufferBounds.max.x, bufferBounds.max.y, 0), new Vector3(bufferBounds.min.x, bufferBounds.max.y, 0));
                 Debug.DrawLine(new Vector3(bufferBounds.min.x, bufferBounds.max.y, 0), new Vector3(bufferBounds.min.x, bufferBounds.min.y, 0));
 #endif
+            }
+        }
 
-                materialBounds[bufferID].Dispose();
+        [BurstCompile(CompileSynchronously = true)]
+        private struct BoundsCheckJob : IJobParallelForBatch
+        {
+            public float2x2 CalculatedBounds
+            {
+                get
+                {
+                    float2x2 value = m_threadBounds[0];
+                    for (int i = 1; i < m_threadBounds.Length; i++)
+                    {
+                        value[0] = math.min(value[0], m_threadBounds[i][0]);
+                        value[1] = math.max(value[1], m_threadBounds[i][1]);
+                    }
+                    return value;
+                }
+            }
+            
+            public JobHandle Ready { get; }
+            
+            [NativeSetThreadIndex]
+            private int m_jobThread;
+            [NativeDisableContainerSafetyRestriction]
+            private NativeArray<float2x2> m_threadBounds;
+            private NativeArray<Bound2D> m_entityBounds;
+            
+            public BoundsCheckJob(EntityQuery query)
+            {
+                JobHandle handle;
+                m_entityBounds = query.ToComponentDataArrayAsync<Bound2D>(Allocator.TempJob, out handle);
+                Ready = handle;
+                
+                m_threadBounds = new NativeArray<float2x2>(JobsUtility.MaxJobThreadCount, Allocator.TempJob, NativeArrayOptions.ClearMemory);
+                for (int i = 0; i < m_threadBounds.Length; i++)
+                    m_threadBounds[i] = new float2x2(new float2(float.MaxValue), new float2(float.MinValue));
+
+                m_jobThread = 0; // just needed to compile
+            }
+
+            public new JobHandle Schedule(JobHandle handle = default(JobHandle))
+            {
+                return this.ScheduleBatch(m_entityBounds.Length, 1024, handle);
+            }
+
+            public void Execute(int startIndex, int count)
+            {
+                float2x2 value = m_threadBounds[m_jobThread];
+
+                for (int i = startIndex; i < startIndex + count; i++)
+                {
+                    Bound2D bounds = m_entityBounds[i];
+                    
+                    float2 relativeScale = bounds.scale / 2f;
+                    // todo need to check if Position2D represents one of the sprite corners or the center (I assume center in this code) 
+                    value[0] = math.min(value[0], bounds.position - relativeScale);
+                    value[1] = math.max(value[1], bounds.position + relativeScale);
+                }
+                
+                m_threadBounds[m_jobThread] = value;
+            }
+
+            public void Dispose()
+            {
+                m_entityBounds.Dispose();
+                m_threadBounds.Dispose();
             }
         }
     } 
