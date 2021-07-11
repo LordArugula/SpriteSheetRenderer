@@ -3,6 +3,7 @@ using Unity.Mathematics;
 
 namespace ECSSpriteSheetAnimation
 {
+    [UpdateInGroup(groupType: typeof(SpriteSheetPreperationGroup))]
     public class SpriteSheetAnimationSystem : SystemBase
     {
         protected override void OnUpdate()

@@ -2,6 +2,7 @@
 using Unity.Entities;
 using Unity.Mathematics;
 using UnityEngine;
+using UnityEngine.U2D;
 
 namespace ECSSpriteSheetAnimation
 {
@@ -29,7 +30,7 @@ namespace ECSSpriteSheetAnimation
                 EntityManager.SetComponentData(e, Idata);
 
             var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
-            BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+            BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
             EntityManager.SetComponentData(e, bh);
             EntityManager.SetSharedComponentData(e, spriteSheetMaterial);
             return e;
@@ -46,7 +47,7 @@ namespace ECSSpriteSheetAnimation
                 EntityManager.SetComponentData(e, Idata);
 
             var spriteSheetMaterial = new SpriteSheetMaterial { material = material };
-            BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+            BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
             EntityManager.SetComponentData(e, bh);
             EntityManager.SetComponentData(e, new SpriteSheetAnimation { frameCount = maxSprites, framesPerSecond = startAnim.FramesPerSecond, playMode = startAnim.PlayMode });
             EntityManager.SetComponentData(e, new SpriteIndex { Value = 0 });
@@ -58,7 +59,7 @@ namespace ECSSpriteSheetAnimation
 
         public static void SetAnimation(Entity e, SpriteSheetAnimationClip animation)
         {
-            int bufferEntityID = EntityManager.GetComponentData<BufferHook>(e).bufferEntityID;
+            int bufferEntityID = EntityManager.GetComponentData<BufferHook>(e).entityID;
             int bufferID = EntityManager.GetComponentData<BufferHook>(e).bufferID;
             Material oldMaterial = DynamicBufferManager.GetMaterial(bufferEntityID);
             string oldAnimation = SpriteSheetCache.GetMaterialName(oldMaterial);
@@ -71,7 +72,7 @@ namespace ECSSpriteSheetAnimation
 
                 //use new buffer
                 bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
-                BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+                BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
 
                 EntityManager.SetSharedComponentData(e, spriteSheetMaterial);
                 EntityManager.SetComponentData(e, bh);
@@ -82,7 +83,7 @@ namespace ECSSpriteSheetAnimation
 
         public static void SetAnimation(EntityCommandBuffer commandBuffer, Entity e, SpriteSheetAnimationClip animation, BufferHook hook)
         {
-            Material oldMaterial = DynamicBufferManager.GetMaterial(hook.bufferEntityID);
+            Material oldMaterial = DynamicBufferManager.GetMaterial(hook.entityID);
             string oldAnimation = SpriteSheetCache.GetMaterialName(oldMaterial);
             if (animation.AnimationName != oldAnimation)
             {
@@ -94,7 +95,7 @@ namespace ECSSpriteSheetAnimation
 
                 //use new buffer
                 int bufferID = DynamicBufferManager.AddDynamicBuffers(DynamicBufferManager.GetEntityBuffer(material), material);
-                BufferHook bh = new BufferHook { bufferID = bufferID, bufferEntityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
+                BufferHook bh = new BufferHook { bufferID = bufferID, entityID = DynamicBufferManager.GetEntityBufferID(spriteSheetMaterial) };
 
                 commandBuffer.SetSharedComponent(e, spriteSheetMaterial);
                 commandBuffer.SetComponent(e, bh);
@@ -126,15 +127,36 @@ namespace ECSSpriteSheetAnimation
         public static void DestroyEntity(EntityCommandBuffer commandBuffer, Entity e, BufferHook hook)
         {
             commandBuffer.DestroyEntity(e);
-            Material material = DynamicBufferManager.GetMaterial(hook.bufferEntityID);
+            Material material = DynamicBufferManager.GetMaterial(hook.entityID);
             DynamicBufferManager.RemoveBuffer(material, hook.bufferID);
         }
 
-        public static void RecordSpriteSheet(Sprite[] sprites, string spriteSheetName, int spriteCount = 0)
+        /// <summary>
+        /// Create a sprite sheet from <paramref name="sprites"/>
+        /// </summary>
+        /// <param name="sprites">sprites to use for sprite sheet</param>
+        /// <param name="spriteSheetName">key to use to find sprite sheet later</param>
+        /// <param name="entityCount">amount of entities that will use this sprite sheet, this can be expanded later using <see cref="DynamicBufferManager.GenerateBuffers"/></param>
+        public static void RecordSpriteSheet(Sprite[] sprites, string spriteSheetName, int entityCount = 0)
         {
             KeyValuePair<Material, float4[]> atlasData = SpriteSheetCache.BakeSprites(sprites, spriteSheetName);
             SpriteSheetMaterial material = new SpriteSheetMaterial { material = atlasData.Key };
-            DynamicBufferManager.GenerateBuffers(material, spriteCount);
+            DynamicBufferManager.GenerateBuffers(material, entityCount);
+            DynamicBufferManager.BakeUvBuffer(material, atlasData);
+            renderInformation.Add(new RenderInformation(material.material, DynamicBufferManager.GetEntityBuffer(material.material)));
+        }
+
+        /// <summary>
+        /// Create a sprite sheet from <paramref name="sprites"/>
+        /// </summary>
+        /// <param name="sprites">spritesAtlas to use for sprite sheet</param>
+        /// <param name="spriteSheetName">key to use to find sprite sheet later</param>
+        /// <param name="entityCount">amount of entities that will use this sprite sheet, this can be expanded later using <see cref="DynamicBufferManager.GenerateBuffers"/></param>
+        public static void RecordSpriteSheet(SpriteAtlas sprites, string spriteSheetName, int entityCount = 0)
+        {
+            KeyValuePair<Material, float4[]> atlasData = SpriteSheetCache.BakeSprites(sprites, spriteSheetName);
+            SpriteSheetMaterial material = new SpriteSheetMaterial { material = atlasData.Key };
+            DynamicBufferManager.GenerateBuffers(material, entityCount);
             DynamicBufferManager.BakeUvBuffer(material, atlasData);
             renderInformation.Add(new RenderInformation(material.material, DynamicBufferManager.GetEntityBuffer(material.material)));
         }
@@ -174,6 +196,8 @@ namespace ECSSpriteSheetAnimation
             //renderInformation[bufferID].uvBuffer.Release();
             if (renderInformation[bufferID].indexBuffer != null)
                 renderInformation[bufferID].indexBuffer.Release();
+            if (renderInformation[bufferID].layerBuffer != null)
+                renderInformation[bufferID].layerBuffer.Release();
         }
     }
 }

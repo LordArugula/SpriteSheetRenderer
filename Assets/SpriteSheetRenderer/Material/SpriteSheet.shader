@@ -30,6 +30,7 @@
             StructuredBuffer<int> indexBuffer;
             StructuredBuffer<float4> uvBuffer;
 			StructuredBuffer<float4> colorsBuffer;
+            StructuredBuffer<float> layerBuffer;
 
             struct v2f{
                 float4 pos : SV_POSITION;
@@ -56,10 +57,12 @@
                 //transform.w = scale
                 float4 transform = matrixBuffer[instanceID];
                 float4 uv = uvBuffer[indexBuffer[instanceID]];
+                float layer = layerBuffer[instanceID];
                 //rotate the vertex
                 v.vertex = mul(v.vertex-float4(0.5,0.5,0,0),rotationZMatrix(transform.z));
                 //scale it
                 float3 worldPosition = float3(transform.x, transform.y, transform.y / 100) + (v.vertex.xyz * transform.w);
+                worldPosition.z -= layer;
                 v2f o;
                 o.pos = UnityObjectToClipPos(float4(worldPosition, 1.0f));
                 o.uv =  v.texcoord * uv.xy + uv.zw;

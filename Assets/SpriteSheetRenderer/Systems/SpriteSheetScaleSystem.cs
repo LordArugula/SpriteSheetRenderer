@@ -3,6 +3,7 @@ using Unity.Transforms;
 
 namespace ECSSpriteSheetAnimation
 {
+    [UpdateInGroup(groupType: typeof(SpriteSheetPreperationGroup))]
     public class SpriteSheetScaleSystem : SystemBase
     {
         protected override void OnUpdate()

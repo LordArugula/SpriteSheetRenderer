@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.Collections;
+using UnityEngine;
 using Unity.Entities;
 using Unity.Mathematics;
 
@@ -25,15 +26,18 @@ namespace ECSSpriteSheetAnimation
             {
                 if (UpdateBuffers(i) > 0)
                 {
-                    Graphics.DrawMeshInstancedIndirect(mesh,
-                                                       0,
-                                                       SpriteSheetManager.renderInformation[i].material,
-                                                       new Bounds(Vector3.zero, Vector3.one),
-                                                       SpriteSheetManager.renderInformation[i].argsBuffer);
+                    Graphics.DrawMeshInstancedIndirect(
+                        mesh,
+                        0, 
+                        SpriteSheetManager.renderInformation[i].material,
+                        SpriteSheetManager.renderInformation[i].bounds,
+                        SpriteSheetManager.renderInformation[i].argsBuffer);
                 }
 
+                Entity bufferEntity = SpriteSheetManager.renderInformation[i].bufferEntity;
+
                 //this is w.i.p to clean the old buffers
-                DynamicBuffer<SpriteIndexBuffer> indexBuffer = EntityManager.GetBuffer<SpriteIndexBuffer>(SpriteSheetManager.renderInformation[i].bufferEntity);
+                DynamicBuffer<SpriteIndexBuffer> indexBuffer = EntityManager.GetBuffer<SpriteIndexBuffer>(bufferEntity);
                 int start = indexBuffer.Length - 1;
                 while (start >= 0 && indexBuffer[start].index == -1)
                 {
@@ -44,9 +48,10 @@ namespace ECSSpriteSheetAnimation
                 int toRemove = indexBuffer.Length - start;
                 if (toRemove > 0)
                 {
-                    EntityManager.GetBuffer<SpriteIndexBuffer>(SpriteSheetManager.renderInformation[i].bufferEntity).RemoveRangeSwapBack(start, toRemove);
-                    EntityManager.GetBuffer<MatrixBuffer>(SpriteSheetManager.renderInformation[i].bufferEntity).RemoveRangeSwapBack(start, toRemove);
-                    EntityManager.GetBuffer<SpriteColorBuffer>(SpriteSheetManager.renderInformation[i].bufferEntity).RemoveRangeSwapBack(start, toRemove);
+                    EntityManager.GetBuffer<SpriteIndexBuffer>(bufferEntity).RemoveRangeSwapBack(start, toRemove);
+                    EntityManager.GetBuffer<MatrixBuffer>(bufferEntity).RemoveRangeSwapBack(start, toRemove);
+                    EntityManager.GetBuffer<SpriteColorBuffer>(bufferEntity).RemoveRangeSwapBack(start, toRemove);
+                    EntityManager.GetBuffer<SpriteLayerBuffer>(bufferEntity).RemoveRangeSwapBack(start, toRemove);
                 }
             }
         }
@@ -86,6 +91,10 @@ namespace ECSSpriteSheetAnimation
                 renderInformation.colorsBuffer = new ComputeBuffer(instanceCount, 16);
                 renderInformation.colorsBuffer.SetData(EntityManager.GetBuffer<SpriteColorBuffer>(renderInformation.bufferEntity).Reinterpret<float4>().AsNativeArray());
                 renderInformation.material.SetBuffer("colorsBuffer", renderInformation.colorsBuffer);
+
+                renderInformation.layerBuffer = new ComputeBuffer(instanceCount, sizeof(float));
+                renderInformation.layerBuffer.SetData(EntityManager.GetBuffer<SpriteLayerBuffer>(renderInformation.bufferEntity).Reinterpret<float>().AsNativeArray());
+                renderInformation.material.SetBuffer("layerBuffer", renderInformation.layerBuffer);
             }
             return instanceCount;
         }

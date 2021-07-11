@@ -1,4 +1,5 @@
-﻿using Unity.Mathematics;
+﻿using ECSSpriteSheetAnimation;
+using Unity.Mathematics;
 using UnityEngine;
 
 public static class Bound2DExtension
@@ -9,6 +10,14 @@ public static class Bound2DExtension
           (Abs(positionA.x - positionB.x) * 2 < (scaleA.x + scaleB.x)) &&
           (Abs(positionA.y - positionB.y) * 2 < (scaleA.y + scaleB.y));
     }
+    
+    public static bool Intersects(this Bound2D a, Bound2D b)
+    {
+        return
+          (Abs(a.position.x - b.position.x) * 2 < (a.scale.x + b.scale.x)) &&
+          (Abs(a.position.y - b.position.y) * 2 < (a.scale.y + b.scale.y));
+    }
+    
     //should be faster than math.abs
     static float Abs(float x)
     {
