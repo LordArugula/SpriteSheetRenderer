@@ -64,6 +64,7 @@ namespace ECSSpriteSheetAnimation
               typeof(SpriteIndexBuffer),
               typeof(MatrixBuffer),
               typeof(SpriteColorBuffer),
+              typeof(SpriteLayerBuffer),
               typeof(SpriteSheetMaterial),
               typeof(UvBuffer)
             );
@@ -83,11 +84,13 @@ namespace ECSSpriteSheetAnimation
             var indexBuffer = EntityManager.GetBuffer<SpriteIndexBuffer>(bufferEntity);
             var colorBuffer = EntityManager.GetBuffer<SpriteColorBuffer>(bufferEntity);
             var matrixBuffer = EntityManager.GetBuffer<MatrixBuffer>(bufferEntity);
+            var layerBuffer = EntityManager.GetBuffer<SpriteLayerBuffer>(bufferEntity);
             for (int i = 0; i < entityCount; i++)
             {
                 indexBuffer.Add(new SpriteIndexBuffer());
                 matrixBuffer.Add(new MatrixBuffer());
                 colorBuffer.Add(new SpriteColorBuffer());
+                layerBuffer.Add(new SpriteLayerBuffer());
             }
         }
 
@@ -99,11 +102,13 @@ namespace ECSSpriteSheetAnimation
             var indexBuffer = EntityManager.GetBuffer<SpriteIndexBuffer>(bufferEntity);
             var colorBuffer = EntityManager.GetBuffer<SpriteColorBuffer>(bufferEntity);
             var matrixBuffer = EntityManager.GetBuffer<MatrixBuffer>(bufferEntity);
+            var layerBuffer = EntityManager.GetBuffer<SpriteLayerBuffer>(bufferEntity);
             if (indexBuffer.Length <= bufferId)
             {
                 indexBuffer.Add(new SpriteIndexBuffer());
                 colorBuffer.Add(new SpriteColorBuffer());
                 matrixBuffer.Add(new MatrixBuffer());
+                layerBuffer.Add(new SpriteLayerBuffer());
             }
             return bufferId;
         }
@@ -174,10 +179,12 @@ namespace ECSSpriteSheetAnimation
             EntityManager.GetBuffer<SpriteIndexBuffer>(bufferEntity).RemoveAt(bufferID);
             EntityManager.GetBuffer<MatrixBuffer>(bufferEntity).RemoveAt(bufferID);
             EntityManager.GetBuffer<SpriteColorBuffer>(bufferEntity).RemoveAt(bufferID);
+            EntityManager.GetBuffer<SpriteLayerBuffer>(bufferEntity).RemoveAt(bufferID);
 
             EntityManager.GetBuffer<SpriteIndexBuffer>(bufferEntity).Insert(bufferID, new SpriteIndexBuffer { index = -1 });
             EntityManager.GetBuffer<MatrixBuffer>(bufferEntity).Insert(bufferID, new MatrixBuffer());
             EntityManager.GetBuffer<SpriteColorBuffer>(bufferEntity).Insert(bufferID, new SpriteColorBuffer());
+            EntityManager.GetBuffer<SpriteLayerBuffer>(bufferEntity).Insert(bufferID, new SpriteLayerBuffer());
         }
 
         public static DynamicBuffer<SpriteIndexBuffer>[] GetIndexBuffers()
@@ -199,6 +206,13 @@ namespace ECSSpriteSheetAnimation
             DynamicBuffer<SpriteColorBuffer>[] buffers = new DynamicBuffer<SpriteColorBuffer>[bufferEntities.Count];
             for (int i = 0; i < buffers.Length; i++)
                 buffers[i] = EntityManager.GetBuffer<SpriteColorBuffer>(bufferEntities[i]);
+            return buffers;
+        }
+        public static DynamicBuffer<SpriteLayerBuffer>[] GetLayerBuffers()
+        {
+            DynamicBuffer<SpriteLayerBuffer>[] buffers = new DynamicBuffer<SpriteLayerBuffer>[bufferEntities.Count];
+            for (int i = 0; i < buffers.Length; i++)
+                buffers[i] = EntityManager.GetBuffer<SpriteLayerBuffer>(bufferEntities[i]);
             return buffers;
         }
         public static DynamicBuffer<UvBuffer>[] GetUvBuffers()

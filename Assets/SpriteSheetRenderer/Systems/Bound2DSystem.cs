@@ -147,7 +147,7 @@ namespace ECSSpriteSheetAnimation
                 m_jobThread = 0; // just needed to compile
             }
 
-            public new JobHandle Schedule(JobHandle handle = default(JobHandle))
+            public JobHandle Schedule(JobHandle handle = default(JobHandle))
             {
                 return this.ScheduleBatch(m_entityBounds.Length, 1024, handle);
             }

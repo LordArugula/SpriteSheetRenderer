@@ -196,6 +196,8 @@ namespace ECSSpriteSheetAnimation
             //renderInformation[bufferID].uvBuffer.Release();
             if (renderInformation[bufferID].indexBuffer != null)
                 renderInformation[bufferID].indexBuffer.Release();
+            if (renderInformation[bufferID].layerBuffer != null)
+                renderInformation[bufferID].layerBuffer.Release();
         }
     }
 }

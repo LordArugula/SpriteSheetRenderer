@@ -10,6 +10,7 @@ namespace ECSSpriteSheetAnimation
         public ComputeBuffer colorsBuffer;
         public ComputeBuffer uvBuffer;
         public ComputeBuffer indexBuffer;
+        public ComputeBuffer layerBuffer;
         public Entity bufferEntity;
         public int spriteCount;
         public Material material;
@@ -61,6 +62,12 @@ namespace ECSSpriteSheetAnimation
             {
                 indexBuffer.Release();
                 indexBuffer = null;
+            }
+
+            if (layerBuffer != null)
+            {
+                layerBuffer.Release();
+                layerBuffer = null;
             }
         }
     } 
